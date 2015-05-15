@@ -13,6 +13,6 @@ public @interface REntity {
 	
 	public String table() default "";
 	
-	public String built() default "";
+	public String id() default "id";
 	
 }

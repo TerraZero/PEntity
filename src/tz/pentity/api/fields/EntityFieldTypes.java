@@ -52,7 +52,7 @@ public class EntityFieldTypes {
 	}
 	
 	public static String[] addAdditionals(String[] additionals, String add) {
-		if (!EntityFieldTypes.hasAdditionals(additionals, add)) {
+		if (add != null && !EntityFieldTypes.hasAdditionals(additionals, add)) {
 			String[] newAdditionals = new String[additionals.length + 1];
 			for (int i = 0; i < additionals.length; i++) {
 				newAdditionals[i] = additionals[i];
@@ -64,7 +64,7 @@ public class EntityFieldTypes {
 	}
 
 	public static String[] removeAdditionals(String[] additionals, String remove) {
-		if (EntityFieldTypes.hasAdditionals(additionals, remove)) {
+		if (remove != null && EntityFieldTypes.hasAdditionals(additionals, remove)) {
 			String[] newAdditionals = new String[additionals.length - 1];
 			int c = 0;
 			for (int i = 0; i < additionals.length; i++) {

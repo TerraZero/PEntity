@@ -18,7 +18,7 @@ public class EFTID implements EntityFieldType {
 		create.keys(refield.name());
 		refield.type("INT");
 		refield.size(0);
-		//refield.additionals(EntityFieldTypes.addAdditionals(refield.additionals(), create.driver().info().autoIncrement()));
+		refield.additionals(EntityFieldTypes.addAdditionals(refield.additionals(), create.driver().info().autoIncrement()));
 	}
 
 }

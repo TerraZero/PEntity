@@ -1,12 +1,17 @@
 package tz.pentity;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import tz.core.logger.Log;
 import tz.pdb.DB;
+import tz.pdb.SQLPlaceholder;
 import tz.pdb.api.DBDriver;
 import tz.pdb.api.statements.DBCreate;
+import tz.pdb.api.statements.DBSelect;
+import tz.pentity.api.EntityType;
 import tz.pentity.api.fields.EntityFieldTypes;
 import tz.preflects.InfoWrapper;
 import tz.preflects.ReflectField;
@@ -57,19 +62,24 @@ public class Entity {
 		}
 		return Entity.driver;
 	}
+	
+	public static String table(InfoWrapper<REntity> info) {
+		String table = info.annotation().table();
+		if (table.length() == 0) {
+			table = info.annotation().name();
+			if (table.length() == 0) {
+				table = info.reflect().name();
+			}
+		}
+		return table;
+	}
 
 	public static void install(String name) {
 		InfoWrapper<REntity> install = Entity.entity(name);
 		if (install == null) {
-			Log.warning(Log.ident("Entity"), "Entity type [0] can not be installed because definition is not found", name);
+			Log.critical(Log.ident("Entity"), "Entity type [0] can not be installed because definition is not found", name);
 		} else {
-			String table = install.annotation().table();
-			if (table.length() == 0) {
-				table = install.annotation().name();
-				if (table.length() == 0) {
-					table = install.reflect().name();
-				}
-			}
+			String table = Entity.table(install);
 			
 			// check if table is exist
 			for (String t : Entity.driver().info().tables()) {
@@ -86,6 +96,38 @@ public class Entity {
 			}
 			create.execute();
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static<entity extends EntityType> List<entity> load(String name, int... ids) {
+		InfoWrapper<REntity> info = Entity.entity(name);
+		List<entity> entities = null;
+		if (info == null) {
+			Log.critical(Log.ident("Entity"), "Entity type [0] can not be loaded because definition is not found", name);
+		} else {
+			DBSelect select = Entity.driver().select(Entity.table(info), "e");
+			select.selectAll();
+			if (ids.length > 0) {
+				select.where("e.id", "!ids", "IN");
+				select.placeholder("!ids", SQLPlaceholder.toValue(ids));
+			}
+			ResultSet result = select.execute();
+			entities = new ArrayList<entity>(ids.length);
+			try {
+				while (result.next()) {
+					entity entity = (entity)info.reflect().newInstantiate();
+					entity.entityLoad(result);
+					entities.add(entity);
+				}
+			} catch (SQLException e) {
+				Log.warning(Log.ident("Entity"), "Error by creating the entity [0]", name);
+			}
+		}
+		return entities;
+	}
+	
+	public static<entity extends EntityType> void save(entity entity) {
+		
 	}
 	
 }
